@@ -5,7 +5,7 @@ import { randomUUID } from 'node:crypto'
 import { knex } from '../database'
 import { z } from 'zod'
 
-export async function usersRoutes(app: FastifyInstance) {
+const routes = async (app: FastifyInstance) => {
   app.get('/', async () => {
     const users = await knex('users').select(
       'id',
@@ -91,3 +91,6 @@ export async function usersRoutes(app: FastifyInstance) {
     return updatedUser
   })
 }
+
+export default routes
+export const autoPrefix = '/users'
