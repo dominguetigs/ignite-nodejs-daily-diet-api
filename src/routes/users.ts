@@ -7,7 +7,12 @@ import { z } from 'zod'
 
 export async function usersRoutes(app: FastifyInstance) {
   app.get('/', async () => {
-    const users = await knex('users').select()
+    const users = await knex('users').select(
+      'id',
+      'name',
+      'email',
+      'created_at',
+    )
     return users
   })
 
