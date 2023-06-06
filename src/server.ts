@@ -1,10 +1,13 @@
 import fastify from 'fastify'
+import { fastifyJwt } from '@fastify/jwt'
+
+import { usersRoutes } from './routes'
 
 const server = fastify()
 
-server.get('/ping', async () => {
-  return 'pong\n'
-})
+server.register(fastifyJwt, { secret: '123456789876543210' })
+
+server.register(usersRoutes, { prefix: 'users' })
 
 server
   .listen({
