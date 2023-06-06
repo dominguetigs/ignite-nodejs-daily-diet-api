@@ -45,13 +45,49 @@ export async function usersRoutes(app: FastifyInstance) {
       id: randomUUID(),
       name,
       email,
-      password: hashedPassword,
     }
 
     const token = app.jwt.sign(userData)
 
+    Object.assign(userData, { password: hashedPassword })
+
     await knex('users').insert({ ...userData, token })
 
     return reply.status(201).send({ token })
+  })
+
+  app.post('/login', async (request, reply) => {
+    const signInUserRequestBodySchema = z.object({
+      email: z.string().email().nonempty(),
+      password: z.string(),
+    })
+
+    const { email, password } = signInUserRequestBodySchema.parse(request.body)
+
+    const user = await knex('users').where('email', email).first()
+
+    if (!user) {
+      return reply.status(401).send('Invalid credentials')
+    }
+
+    const passwordMatched = await bcrypt.compare(password, user.password)
+
+    if (!passwordMatched) {
+      return reply.status(401).send('Invalid credentials')
+    }
+
+    const token = app.jwt.sign({
+      id: user.id,
+      name: user.name,
+      email,
+    })
+
+    const updatedUser = await knex('users')
+      .update({
+        token,
+      })
+      .returning(['id', 'name', 'email', 'created_at', 'token'])
+
+    return updatedUser
   })
 }
