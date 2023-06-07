@@ -4,9 +4,6 @@ import { randomUUID } from 'node:crypto'
 
 import { knex } from '../database'
 import { auth } from '../helpers/authentication'
-import { CreateMealRequestBodySchema } from '../schemas/createMealRequestBody'
-import { UpdateMealBodySchema } from '../schemas/updateMealBody'
-import { UpdateMealParamsSchema } from '../schemas/updateMealParams'
 import { z } from 'zod'
 
 const routes = async (app: FastifyInstance) => {
@@ -27,13 +24,21 @@ const routes = async (app: FastifyInstance) => {
   })
 
   app.post('/', auth(app), async (request, reply) => {
+    const createMealBodySchema = z.object({
+      name: z.string().nonempty(),
+      description: z.string().nonempty(),
+      date: z.string().nonempty(),
+      time: z.string().nonempty(),
+      included_in_diet: z.boolean().default(false),
+    })
+
     const {
       name,
       description,
       date,
       time,
       included_in_diet: includedInDiet,
-    } = CreateMealRequestBodySchema.parse(request.body)
+    } = createMealBodySchema.parse(request.body)
 
     const meal = {
       id: randomUUID(),
@@ -51,15 +56,27 @@ const routes = async (app: FastifyInstance) => {
   })
 
   app.put('/:id', auth(app), async (request, reply) => {
+    const updateMealBodySchema = z.object({
+      name: z.string().nonempty(),
+      description: z.string().nonempty(),
+      date: z.string().nonempty(),
+      time: z.string().nonempty(),
+      included_in_diet: z.boolean().default(false),
+    })
+
+    const updateMealParamsSchema = z.object({
+      id: z.string(),
+    })
+
     const {
       name,
       description,
       date,
       time,
       included_in_diet: includedInDiet,
-    } = UpdateMealBodySchema.parse(request.body)
+    } = updateMealBodySchema.parse(request.body)
 
-    const { id } = UpdateMealParamsSchema.parse(request.params)
+    const { id } = updateMealParamsSchema.parse(request.params)
 
     await knex('meals').where('id', id).update({
       id,

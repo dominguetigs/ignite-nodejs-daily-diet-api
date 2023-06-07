@@ -1,8 +1,8 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import fp from 'fastify-plugin'
+import { z } from 'zod'
 
 import { knex } from '../database'
-import { UserSchema } from '../schemas/user'
 
 const authenticate = async (
   app: FastifyInstance,
@@ -13,7 +13,13 @@ const authenticate = async (
   const token = authorization?.replace(/^Bearer\s/, '')
   const decodedUser = app.jwt.decode(token)
 
-  const decoded = UserSchema.parse(decodedUser)
+  const userSchema = z.object({
+    id: z.string(),
+    name: z.string(),
+    email: z.string(),
+  })
+
+  const decoded = userSchema.parse(decodedUser)
 
   if (!decoded || !decoded?.id) {
     return reply.status(400).send('Malformed token')

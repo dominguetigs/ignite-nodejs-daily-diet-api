@@ -1,10 +1,9 @@
 import { FastifyInstance } from 'fastify'
 import bcrypt from 'bcrypt'
+import { z } from 'zod'
 import { randomUUID } from 'node:crypto'
 
 import { knex } from '../database'
-import { SignInUserRequestBodySchema } from '../schemas/signInUserRequestBody'
-import { UserCreateRequestBodySchema } from '../schemas/userCreateRequestBody'
 
 const routes = async (app: FastifyInstance) => {
   app.get('/', async () => {
@@ -18,9 +17,19 @@ const routes = async (app: FastifyInstance) => {
   })
 
   app.post('/', async (request, reply) => {
-    const { email, name, password } = UserCreateRequestBodySchema.parse(
-      request.body,
-    )
+    const createUserBodySchema = z
+      .object({
+        name: z.string().nonempty(),
+        email: z.string().email(),
+        password: z.string().min(6),
+        confirmPassword: z.string().min(6),
+      })
+      .refine((data) => data.password === data.confirmPassword, {
+        message: "Passwords don't match",
+        path: ['confirm'],
+      })
+
+    const { email, name, password } = createUserBodySchema.parse(request.body)
 
     const userExists = await knex('users').where('email', email).first()
 
@@ -46,7 +55,12 @@ const routes = async (app: FastifyInstance) => {
   })
 
   app.post('/login', async (request, reply) => {
-    const { email, password } = SignInUserRequestBodySchema.parse(request.body)
+    const signInUserBodySchema = z.object({
+      email: z.string().email().nonempty(),
+      password: z.string(),
+    })
+
+    const { email, password } = signInUserBodySchema.parse(request.body)
 
     const user = await knex('users').where('email', email).first()
 
