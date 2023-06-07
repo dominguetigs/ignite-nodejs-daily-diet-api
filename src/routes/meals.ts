@@ -40,8 +40,8 @@ const routes = async (app: FastifyInstance) => {
   app.get('/summary', auth(app), async (request, reply) => {
     const subquery = knex('meals')
       .where('user_id', request.user_data?.id)
-      .select('date')
       .where('included_in_diet', 1)
+      .select('date')
       .sum('included_in_diet AS total')
       .groupBy('date')
 
