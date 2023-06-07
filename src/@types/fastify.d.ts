@@ -1,16 +1,17 @@
-// eslint-disable-next-line no-unused-vars
-import { FastifyInstance } from 'fastify'
-import {
-  FastifyReplyType,
-  FastifyRequestType,
-} from 'fastify/types/type-provider'
+/* eslint-disable no-unused-vars */
+import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 
 declare module 'fastify' {
-  // eslint-disable-next-line no-unused-vars
+  interface FastifyRequest {
+    user?: {
+      id: string
+      name: string
+      email: string
+      token: string
+    }
+  }
+
   interface FastifyInstance {
-    authenticate(
-      request: FastifyRequestType,
-      reply: FastifyReplyType,
-    ): Promise<void>
+    authenticate(request: FastifyRequest, reply: FastifyReply): Promise<void>
   }
 }
