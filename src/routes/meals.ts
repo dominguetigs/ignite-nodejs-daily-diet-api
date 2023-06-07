@@ -7,6 +7,18 @@ import { auth } from '../helpers/authentication'
 import { z } from 'zod'
 
 const routes = async (app: FastifyInstance) => {
+  app.get('/', auth(app), async (request, reply) => {
+    const meals = await knex('meals')
+      .where('user_id', request.user_data?.id)
+      .select()
+
+    const response = {
+      items: meals,
+    }
+
+    return reply.status(200).send(response)
+  })
+
   app.get('/:id', auth(app), async (request, reply) => {
     const getMealParamsSchema = z.object({
       id: z.string(),
