@@ -14,7 +14,9 @@ const routes = async (app: FastifyInstance) => {
 
     const { id } = getMealParamsSchema.parse(request.params)
 
-    const meal = await knex('meals').where('id', id).first()
+    const meal = await knex('meals')
+      .where({ id, user_id: request.user_data?.id })
+      .first()
 
     if (!meal) {
       return reply.status(404).send('Meal not found')
@@ -78,7 +80,7 @@ const routes = async (app: FastifyInstance) => {
 
     const { id } = updateMealParamsSchema.parse(request.params)
 
-    await knex('meals').where('id', id).update({
+    await knex('meals').where({ id, user_id: request.user_data?.id }).update({
       id,
       name,
       description,
@@ -87,7 +89,19 @@ const routes = async (app: FastifyInstance) => {
       included_in_diet: includedInDiet,
     })
 
-    return reply.status(201).send()
+    return reply.status(200).send()
+  })
+
+  app.delete('/:id', auth(app), async (request, reply) => {
+    const deleteMealParamsSchema = z.object({
+      id: z.string(),
+    })
+
+    const { id } = deleteMealParamsSchema.parse(request.params)
+
+    await knex('meals').where({ id, user_id: request.user_data?.id }).delete()
+
+    return reply.status(200).send('Meal successfully deleted')
   })
 }
 
