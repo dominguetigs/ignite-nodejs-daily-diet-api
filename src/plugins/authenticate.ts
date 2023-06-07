@@ -29,7 +29,7 @@ const authenticate = async (
     return reply.status(401).send('Token expired')
   }
 
-  request.user = user
+  request.user_data = user
   return user
 }
 

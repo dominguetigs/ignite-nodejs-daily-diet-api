@@ -3,7 +3,7 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 
 declare module 'fastify' {
   interface FastifyRequest {
-    user?: {
+    user_data?: {
       id: string
       name: string
       email: string

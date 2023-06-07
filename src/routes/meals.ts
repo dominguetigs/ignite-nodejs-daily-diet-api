@@ -2,9 +2,8 @@ import { FastifyInstance } from 'fastify'
 
 import { randomUUID } from 'node:crypto'
 
-import { auth } from '../helpers/authentication'
-import { UserSchema } from '../schemas/user'
 import { knex } from '../database'
+import { auth } from '../helpers/authentication'
 import { CreateMealRequestBodySchema } from '../schemas/createMealRequestBody'
 
 const routes = async (app: FastifyInstance) => {
@@ -24,7 +23,7 @@ const routes = async (app: FastifyInstance) => {
       date,
       time,
       included_in_diet: includedInDiet,
-      user_id: UserSchema.parse(request.user).id,
+      user_id: request.user_data?.id,
     }
 
     return await knex('meals').insert(meal).returning('*')
