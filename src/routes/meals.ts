@@ -37,6 +37,38 @@ const routes = async (app: FastifyInstance) => {
     return reply.status(200).send(meal)
   })
 
+  app.get('/summary', auth(app), async (request, reply) => {
+    const subquery = knex('meals')
+      .where('user_id', request.user_data?.id)
+      .select('date')
+      .where('included_in_diet', 1)
+      .sum('included_in_diet AS total')
+      .groupBy('date')
+
+    const includedIdDietQuery =
+      'COALESCE(SUM(CASE WHEN included_in_diet = 1 THEN 1 ELSE 0 END), 0) AS included_in_diet'
+
+    const notIncludedInDietQuery =
+      'COALESCE(SUM(CASE WHEN included_in_diet = 0 THEN 1 ELSE 0 END), 0) AS not_included_in_diet'
+
+    const maxTotalQuery = `(
+      SELECT COALESCE(MAX(sub.total), 0)
+      FROM (${subquery.toQuery()}) AS sub
+    ) AS max_total`
+
+    const summary = await knex('meals')
+      .where('user_id', request.user_data?.id)
+      .select(
+        knex.raw('COUNT(*) AS total'),
+        knex.raw(includedIdDietQuery),
+        knex.raw(notIncludedInDietQuery),
+        knex.raw(maxTotalQuery),
+      )
+      .first()
+
+    return reply.status(200).send(summary)
+  })
+
   app.post('/', auth(app), async (request, reply) => {
     const createMealBodySchema = z.object({
       name: z.string().nonempty(),
